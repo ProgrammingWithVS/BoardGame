@@ -1,4 +1,4 @@
-name: My Github Actions Pipeline
+name: My Github Actions Pipeline:
 
 on:
   push:
