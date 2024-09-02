@@ -34,3 +34,6 @@ jobs:
     - name: Push Docker Image
       run: |
           docker push sucheeth/boardgame:latest
+    - name: Docker run
+      run: |
+         docker run -d --name boardgame -p 8080:8080 sucheeth/boardgame
