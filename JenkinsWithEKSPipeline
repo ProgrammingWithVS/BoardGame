@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk17'
+        maven 'maven'
+    }
+    stages {
+        stage ('Git Checkout') {
+            steps {
+                git branch: 'main', changelog: false, poll: false, url: 'https://github.com/ProgrammingWithVS/BoardGame.git'
+            }
+        }
+        stage ('Mvn Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage ('Docker Steps') {
+            steps {
+                withCredentials([string(credentialsId: 'dockersecret', variable: 'dockertoken')]) {
+                sh 'docker login -u sucheeth -p $dockertoken'
+                sh 'docker build -t sucheeth/boardgames:latest .'
+                sh 'docker push sucheeth/boardgames:latest'
+                }
+            }
+        }
+        stage ('K8s Steps') {
+            steps {
+                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'my-eks22', contextName: '', credentialsId: 'K8s', namespace: 'webapps', serverUrl: 'https://F0FB4C4C597650CD104FC5F80B5CBC4E.gr7.ap-south-1.eks.amazonaws.com']]) {
+                    sh 'kubectl apply -f deployment-service.yaml'
+                    sleep 60
+                    sh 'kubectl get pods -n webapps'
+                    sh 'kubectl get svc -n webapps'
+                }
+            }
+        }
+    }
+}
